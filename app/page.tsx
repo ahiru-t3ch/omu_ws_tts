@@ -2,6 +2,24 @@
 
 import { useEffect, useState } from 'react';
 
+type LangCode = 'a' | 'b' | 'e' | 'f';
+type VoiceOption = { voiceName: string; voiceLabel: string; gender: 'f' | 'm' };
+
+const VOICES_BY_LANG: Record<LangCode, VoiceOption[]> = {
+  a: [
+    { voiceName: 'af_heart', voiceLabel: 'Heart', gender: 'f' },
+    { voiceName: 'af_bella', voiceLabel: 'Bella', gender: 'f' },
+    { voiceName: 'am_fenrir', voiceLabel: 'Fenrir', gender: 'm' },
+    { voiceName: 'am_michael', voiceLabel: 'Michael', gender: 'm' },
+  ],
+  b: [{ voiceName: 'bf_emma', voiceLabel: 'Emma', gender: 'f' }],
+  e: [
+    { voiceName: 'ef_dora', voiceLabel: 'Dora', gender: 'f' },
+    { voiceName: 'em_alex', voiceLabel: 'Alex', gender: 'm' },
+  ],
+  f: [{ voiceName: 'ff_siwis', voiceLabel: 'Siwis', gender: 'f' }],
+};
+
 export default function Page() {
   const envLimit = Number(process.env.NEXT_PUBLIC_TTS_TEXT_LIMIT ?? '5000');
   const LIMIT = Number.isFinite(envLimit) && envLimit > 0 ? envLimit : 5000;
@@ -10,7 +28,10 @@ export default function Page() {
   const [error, setError] = useState('');
   const [audioUrl, setAudioUrl] = useState('');
   const [audioFilename, setAudioFilename] = useState('');
+  const [langCode, setLangCode] = useState<LangCode>('a');
+  const [voice, setVoice] = useState('af_heart');
   const remaining = LIMIT - text.length;
+  const voiceOptions = VOICES_BY_LANG[langCode];
 
   useEffect(() => {
     return () => {
@@ -19,6 +40,17 @@ export default function Page() {
       }
     };
   }, [audioUrl]);
+
+  useEffect(() => {
+    const firstVoiceForLang = VOICES_BY_LANG[langCode][0]?.voiceName ?? '';
+    const isCurrentVoiceValid = VOICES_BY_LANG[langCode].some(
+      (voiceOption) => voiceOption.voiceName === voice
+    );
+
+    if (!isCurrentVoiceValid) {
+      setVoice(firstVoiceForLang);
+    }
+  }, [langCode, voice]);
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setText(e.target.value);
@@ -41,8 +73,8 @@ export default function Page() {
         },
         body: JSON.stringify({
           text,
-          lang_code: 'a',
-          voice: 'af_heart',
+          lang_code: langCode,
+          voice,
           speed: 1.0,
           split_pattern: '\\n+',
         }),
@@ -73,21 +105,56 @@ export default function Page() {
   };
   
   return (
-    <div className='flex flex-col gap-2 p-4'>
+    <div className='min-h-full p-4 md:p-6'>
+    <div className='mx-auto flex w-full max-w-3xl flex-col gap-3 rounded-2xl border border-emerald-200 bg-white/90 p-4 shadow-lg shadow-emerald-200/40 md:p-6'>
 
     <textarea
-    className="w-full rounded-md border border-gray-300 bg-white p-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+    className="min-h-56 w-full rounded-md border border-emerald-300 bg-white p-3 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200"
     value={text}
     onChange={handleChange}
     maxLength={LIMIT}
     placeholder="Enter your text here"
     />
-
-    <p>{remaining} characters remaining</p>
+    <p className='text-sm text-emerald-700'>{remaining} characters remaining</p>
+    <div className='mt-2 grid grid-cols-1 gap-3 md:grid-cols-2'>
+      <div className='flex flex-col gap-1'>
+        <label className='text-sm font-medium text-emerald-800' htmlFor='lang-select'>
+          Language
+        </label>
+        <select
+          id='lang-select'
+          className='w-full rounded-md border border-emerald-300 bg-white p-2 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200'
+          value={langCode}
+          onChange={(e) => setLangCode(e.target.value as LangCode)}
+        >
+          <option value='a'>American English</option>
+          <option value='b'>British English</option>
+          <option value='e'>Spanish</option>
+          <option value='f'>French</option>
+        </select>
+      </div>
+      <div className='flex flex-col gap-1'>
+        <label className='text-sm font-medium text-emerald-800' htmlFor='voice-select'>
+          Voice
+        </label>
+        <select
+          id='voice-select'
+          className='w-full rounded-md border border-emerald-300 bg-white p-2 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200'
+          value={voice}
+          onChange={(e) => setVoice(e.target.value)}
+        >
+          {voiceOptions.map((voiceOption) => (
+            <option key={voiceOption.voiceName} value={voiceOption.voiceName}>
+              {voiceOption.voiceLabel} ({voiceOption.gender})
+            </option>
+          ))}
+        </select>
+      </div>
+    </div>
     {error ? <p className='text-sm text-red-600'>{error}</p> : null}
 
     <button
-    className='self-start rounded-md bg-blue-600 px-4 py-2 font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50'
+    className='self-start rounded-md bg-emerald-600 px-4 py-2 font-medium text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50'
     onClick={handleGenerateAudio}
     disabled={isLoading || !text.trim()}
     >
@@ -95,11 +162,19 @@ export default function Page() {
     </button>
     {audioUrl ? (
       <div className='mt-2 flex flex-col gap-1'>
-        <p className='text-sm text-gray-700'>{audioFilename}</p>
+        <p className='text-sm text-emerald-800'>{audioFilename}</p>
         <audio controls src={audioUrl} className='w-full' />
+        <a
+          href={audioUrl}
+          download={audioFilename || 'tts.wav'}
+          className='mt-2 self-start rounded-md bg-emerald-600 px-4 py-2 font-medium text-white transition hover:bg-emerald-700'
+        >
+          Download audio
+        </a>
       </div>
     ) : null}
 
+    </div>
     </div>
   );
 }
