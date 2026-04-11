@@ -1,6 +1,16 @@
 import './globals.css';
+import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
+
+export const metadata: Metadata = {
+  title: 'OMU TTS',
+  description: 'Text-to-speech demo — OMU TTS',
+  icons: {
+    icon: '/omu_tts_logo.png',
+    apple: '/omu_tts_logo.png',
+  },
+};
 
 export default function RootLayout({
   children,
