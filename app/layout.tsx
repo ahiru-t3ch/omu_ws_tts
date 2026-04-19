@@ -2,6 +2,7 @@ import './globals.css';
 import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
+import Script from 'next/script';
 
 export const metadata: Metadata = {
   title: 'OMU TTS',
@@ -20,6 +21,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="min-h-screen flex flex-col bg-gradient-to-b from-emerald-50 via-lime-50 to-cyan-50 text-gray-900">
+        <Script
+          src="https://stats.ahiru-t3ch.com/script.js"
+          strategy="afterInteractive"
+          data-website-id="0d18ba2a-2dd8-4000-b945-811b0cbb7e76"
+        />
         <header className='border-b border-emerald-200/70 bg-white/70 p-4 pl-8 backdrop-blur'>
           <div className='flex items-center justify-between pr-6'>
             <Link href='/' className='flex items-center gap-3'>
