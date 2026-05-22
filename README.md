@@ -1,10 +1,12 @@
 # OMU WS TTS
 
-Webapp connectée à OMU IA TTS.
+Web app connected to OMU IA TTS.
+
+**Voice cloning** is planned for this project and is **under construction** — the web UI will expose it once the OMU IA TTS API supports it.
 
 ## Configuration
 
-Créer un fichier `.env.local` (développement) ou `.env` / `.env.local` (Docker Compose) à la racine du projet :
+Create a `.env.local` file (local development) or `.env` / `.env.local` (Docker Compose) at the project root:
 
 ```
 TTS_API_TOKEN=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
@@ -13,17 +15,18 @@ DOWNLOAD_FLAG=true
 NEXT_PUBLIC_TTS_TEXT_LIMIT=5000
 ```
 
-- **TTS_API_TOKEN** et **API_URL** sont obligatoires pour que l’API `/api/tts` fonctionne.
-- Sous Docker, si l’API TTS tourne sur la machine hôte, utilisez par défaut `http://host.docker.internal:8001` (déjà la valeur par défaut dans `docker-compose.yml` si `API_URL` n’est pas défini).
+- **TTS_API_TOKEN** and **API_URL** are required for the `/api/tts` route to work.
+- With Docker, if the TTS API runs on the host machine, use `http://host.docker.internal:8001` by default (already the default in `docker-compose.yml` when `API_URL` is not set).
 
-### Port 8001 (API TTS) et Coolify
+### Port 8001 (TTS API) and Coolify
 
-Sur un VPS avec **Coolify**, le port **8000** de l’hôte est souvent déjà utilisé par l’interface Coolify (`coolify` mappe `8000->8080`). Pour éviter le conflit `Bind for 0.0.0.0:8000 failed: port is already allocated`, l’API TTS doit **ne pas** publier `8000` sur l’hôte, ou publier **`8001:8000`** (port hôte **8001** → port applicatif **8000** dans le conteneur).
+On a VPS with **Coolify**, host port **8000** is often already used by the Coolify UI (`coolify` maps `8000->8080`). To avoid `Bind for 0.0.0.0:8000 failed: port is already allocated`, the TTS API should **not** publish `8000` on the host, or publish **`8001:8000`** (host port **8001** → application port **8000** in the container).
 
-Dans le repo **omu_ia_tts**, adapte le `docker-compose.yml` du service API : remplace `8000:8000` par `8001:8000` (ou supprime `ports` si Coolify route uniquement via le proxy sans bind hôte). Ce dépôt pointe par défaut vers l’API sur le **8001** de l’hôte pour le dev local / Docker Desktop.
-- **NEXT_PUBLIC_TTS_TEXT_LIMIT** est pris en compte au **build** de l’image Docker (voir ci‑dessous).
+In the **omu_ia_tts** repo, update the API service `docker-compose.yml`: replace `8000:8000` with `8001:8000` (or remove `ports` if Coolify routes only through the proxy without host binding). This repo defaults to the API on host **8001** for local dev / Docker Desktop.
 
-## Développement local
+- **NEXT_PUBLIC_TTS_TEXT_LIMIT** is applied at Docker image **build** time (see below).
+
+## Local development
 
 ```bash
 npm install
@@ -32,24 +35,24 @@ npm run dev
 
 ## Docker
 
-### Prérequis
+### Prerequisites
 
-- [Docker](https://docs.docker.com/get-docker/) et Docker Compose v2.
+- [Docker](https://docs.docker.com/get-docker/) and Docker Compose v2.
 
-### Lancer avec Compose
+### Run with Compose
 
-1. Définir les variables dans `.env` ou `.env.local` à la racine (Compose charge maintenant les deux fichiers).
-2. Construire et démarrer :
+1. Set variables in `.env` or `.env.local` at the project root (Compose loads both files).
+2. Build and start:
 
 ```bash
 docker compose up --build
 ```
 
-L’application est disponible sur [http://localhost:3000](http://localhost:3000).
+The app is available at [http://localhost:3000](http://localhost:3000).
 
-Pour changer la limite de texte côté client, définir `NEXT_PUBLIC_TTS_TEXT_LIMIT` dans `.env` **avant** `docker compose build` (ou `up --build`), car Next.js l’intègre au moment du build.
+To change the client-side text limit, set `NEXT_PUBLIC_TTS_TEXT_LIMIT` in `.env` **before** `docker compose build` (or `up --build`), because Next.js embeds it at build time.
 
-### Image seule (sans Compose)
+### Image only (without Compose)
 
 ```bash
 docker build \

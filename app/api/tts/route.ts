@@ -5,7 +5,7 @@ export async function POST(request: Request) {
     const { text, lang_code, voice, speed, split_pattern } = await request.json();
 
     if (!text || typeof text !== "string") {
-      return NextResponse.json({ error: "Texte invalide." }, { status: 400 });
+      return NextResponse.json({ error: "Invalid text." }, { status: 400 });
     }
 
     const response = await fetch(`${process.env.API_URL}/tts?download=${process.env.DOWNLOAD_FLAG}`, {
@@ -47,7 +47,7 @@ export async function POST(request: Request) {
 
   } catch (error) {
     return NextResponse.json(
-      { error: "Erreur serveur pendant la génération audio." },
+      { error: "Server error while generating audio." },
       { status: 500 }
     );
   }
